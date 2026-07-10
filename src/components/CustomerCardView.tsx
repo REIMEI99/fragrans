@@ -9,7 +9,7 @@ export function CustomerCardView({ customers }: CustomerCardViewProps) {
     <section className="panel panel-compact">
       <div className="panel-header">
         <h2>公共顾客池</h2>
-        <span className="eyebrow">+4 / 卡</span>
+        <span className="eyebrow">封瓶时结算</span>
       </div>
       {customers.length > 0 ? (
         <div className="customer-stack">
@@ -18,7 +18,7 @@ export function CustomerCardView({ customers }: CustomerCardViewProps) {
               <div className="eyebrow">Commission {String(index + 1).padStart(2, "0")}</div>
               <p className="customer-title">{customer.title}</p>
               <p className="customer-text">{customer.text}</p>
-              <span className="customer-points">完成即离场</span>
+              <span className="customer-points">奖励 +{customer.reward}</span>
             </div>
           ))}
         </div>

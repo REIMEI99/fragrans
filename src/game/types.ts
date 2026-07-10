@@ -23,18 +23,24 @@ export interface CustomerCard {
   id: string;
   title: string;
   text: string;
+  reward: number;
   predicate: CustomerPredicate;
 }
 
 export type CustomerPredicate =
-  | { type: "runAtLeast"; length: number }
-  | { type: "sameIngredientAtLeast"; count: number }
   | { type: "containsIngredients"; ingredients: Ingredient[] }
   | { type: "startsWith"; ingredient: Ingredient }
   | { type: "endsWith"; ingredient: Ingredient }
   | { type: "containsPairAdjacent"; pair: [Ingredient, Ingredient] }
   | { type: "bottleSizeAtLeast"; count: number }
-  | { type: "allDistinct" };
+  | { type: "bottleSizeExactly"; count: number }
+  | { type: "allDistinct" }
+  | { type: "uniqueIngredientExactly"; count: number }
+  | { type: "countPattern"; counts: number[] }
+  | { type: "ingredientsRepeatedExactly"; repeatCount: number; ingredientKinds: number }
+  | { type: "stageIs"; stage: Exclude<BottleStage, "none"> }
+  | { type: "rotTokensExactly"; count: number }
+  | { type: "bottleSizeAtLeastAndRotExactly"; minimum: number; rotCount: number };
 
 export interface BottleScoreBreakdown {
   base: number;

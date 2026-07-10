@@ -8,7 +8,7 @@ interface BottleViewProps {
 }
 
 export function BottleView({ bottle, slotIndex }: BottleViewProps) {
-  const title = slotIndex === 0 ? "I · Alabaster" : "II · Gossamer";
+  const title = slotIndex === 0 ? "I 路 Alabaster" : "II 路 Gossamer";
 
   if (!bottle) {
     return (
@@ -16,9 +16,8 @@ export function BottleView({ bottle, slotIndex }: BottleViewProps) {
         <div className="vessel-neck" />
         <div className="vessel is-empty">
           {POSITION_INFO.map((slot) => (
-            <div key={slot.index} className="vessel__slot">
+            <div key={slot.index} className="vessel__slot vessel__slot-empty">
               <span>{slot.label}</span>
-              <i className="vessel__dot" />
             </div>
           ))}
         </div>
@@ -33,15 +32,16 @@ export function BottleView({ bottle, slotIndex }: BottleViewProps) {
       <div className="vessel-neck" />
       <div className="vessel">
         {bottle.slots.map((slot, index) => (
-          <div key={index} className={`vessel__slot ${slot.ingredient ? "is-filled" : ""}`}>
-            <div className="vessel__slot-main">
+          <div
+            key={index}
+            className={`vessel__slot ${slot.ingredient ? "is-filled" : "vessel__slot-empty"}`}
+            style={slot.ingredient ? ({ ["--slot-color" as string]: INGREDIENT_INFO[slot.ingredient].color }) : undefined}
+          >
+            {slot.ingredient ? (
+              <span className="vessel__slot-filled-name">{INGREDIENT_INFO[slot.ingredient].label}</span>
+            ) : (
               <span>{POSITION_INFO[index].label}</span>
-              <span className="vessel__slot-name">{slot.ingredient ? INGREDIENT_INFO[slot.ingredient].label : POSITION_INFO[index].name}</span>
-            </div>
-            <i
-              className="vessel__dot"
-              style={slot.ingredient ? ({ ["--slot-color" as string]: INGREDIENT_INFO[slot.ingredient].color }) : undefined}
-            />
+            )}
           </div>
         ))}
       </div>

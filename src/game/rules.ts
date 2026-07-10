@@ -145,12 +145,9 @@ export function currentIngredients(bottle: Bottle): Ingredient[] {
 export function customerSatisfied(bottle: Bottle, card: CustomerCard): boolean {
   const ingredients = currentIngredients(bottle);
   const filled = filledCount(bottle);
+  const counts = Object.values(ingredientCounts(bottle)).sort((left, right) => right - left);
 
   switch (card.predicate.type) {
-    case "runAtLeast":
-      return orderChainLength(bottle) >= card.predicate.length;
-    case "sameIngredientAtLeast":
-      return Math.max(0, ...Object.values(ingredientCounts(bottle))) >= card.predicate.count;
     case "containsIngredients":
       return card.predicate.ingredients.every((ingredient) => ingredients.includes(ingredient));
     case "startsWith":
@@ -163,8 +160,24 @@ export function customerSatisfied(bottle: Bottle, card: CustomerCard): boolean {
       return hasAdjacentPair(bottle, card.predicate.pair);
     case "bottleSizeAtLeast":
       return filled >= card.predicate.count;
+    case "bottleSizeExactly":
+      return filled === card.predicate.count;
     case "allDistinct":
       return filled === 6 && new Set(ingredients).size === 6;
+    case "uniqueIngredientExactly":
+      return new Set(ingredients).size === card.predicate.count;
+    case "countPattern":
+      return matchesCountPattern(counts, card.predicate.counts, filled);
+    case "ingredientsRepeatedExactly": {
+      const { repeatCount, ingredientKinds } = card.predicate;
+      return counts.filter((count) => count === repeatCount).length === ingredientKinds;
+    }
+    case "stageIs":
+      return bottle.stage === card.predicate.stage;
+    case "rotTokensExactly":
+      return bottle.rotTokens === card.predicate.count;
+    case "bottleSizeAtLeastAndRotExactly":
+      return filled >= card.predicate.minimum && bottle.rotTokens === card.predicate.rotCount;
   }
 }
 
@@ -173,7 +186,7 @@ export function matchedCustomerIndexes(bottle: Bottle, customers: CustomerCard[]
 }
 
 export function customerScoreForBottle(bottle: Bottle, customers: CustomerCard[]): number {
-  return matchedCustomerIndexes(bottle, customers).length * 4;
+  return matchedCustomerIndexes(bottle, customers).reduce((sum, index) => sum + customers[index].reward, 0);
 }
 
 export function scoreBottle(
@@ -245,12 +258,27 @@ function ingredientCounts(bottle: Bottle): Partial<Record<Ingredient, number>> {
 }
 
 function hasAdjacentPair(bottle: Bottle, pair: [Ingredient, Ingredient]): boolean {
-  for (let i = 0; i < bottle.slots.length - 1; i += 1) {
-    const left = bottle.slots[i].ingredient;
-    const right = bottle.slots[i + 1].ingredient;
+  for (let index = 0; index < bottle.slots.length - 1; index += 1) {
+    const left = bottle.slots[index].ingredient;
+    const right = bottle.slots[index + 1].ingredient;
     if (left === pair[0] && right === pair[1]) {
       return true;
     }
   }
   return false;
+}
+
+function matchesCountPattern(actualCounts: number[], targetCounts: number[], filled: number): boolean {
+  const sortedActual = [...actualCounts].sort((left, right) => right - left);
+  const sortedTarget = [...targetCounts].sort((left, right) => right - left);
+
+  if (sortedActual.length !== sortedTarget.length) {
+    return false;
+  }
+
+  if (sortedTarget.reduce((sum, count) => sum + count, 0) !== filled) {
+    return false;
+  }
+
+  return sortedActual.every((count, index) => count === sortedTarget[index]);
 }

@@ -317,31 +317,18 @@ input {
 
 .vessel__slot {
   height: calc(100% / 6);
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  display: flex;
   align-items: center;
-  padding: 0 22px;
+  justify-content: center;
+  padding: 0 20px;
   border-bottom: 1px solid rgba(214, 197, 170, 0.45);
   color: #928a7f;
   font-size: 0.82rem;
+  text-align: center;
 }
 
 .vessel__slot:last-child {
   border-bottom: 0;
-}
-
-.vessel__slot-main {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  justify-content: space-between;
-}
-
-.vessel__slot-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 8rem;
 }
 
 .vessel__dot,
@@ -358,9 +345,22 @@ input {
   background: transparent;
 }
 
+.vessel__slot-empty {
+  letter-spacing: 0.14em;
+}
+
+.vessel__slot.is-filled {
+  background: color-mix(in srgb, var(--slot-color, var(--gold-soft)) 72%, white 28%);
+  color: #55493d;
+}
+
+.vessel__slot-filled-name {
+  font-size: 0.94rem;
+  letter-spacing: 0.08em;
+}
+
 .vessel__slot.is-filled .vessel__dot {
-  background: var(--slot-color, var(--gold-soft));
-  box-shadow: 0 0 0 4px rgba(201, 157, 78, 0.09);
+  display: none;
 }
 
 .vessel-name {
@@ -584,14 +584,18 @@ input {
   border-radius: 18px;
   background: rgba(250, 245, 237, 0.8);
   border: 1px solid rgba(219, 203, 176, 0.44);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 .score-item strong {
-  display: inline-block;
+  display: block;
   margin-top: 0.55rem;
   padding: 0.3rem 0.55rem;
   font-size: 0.9rem;
   font-weight: 400;
+  text-align: left;
 }
 
 .guide-grid {
