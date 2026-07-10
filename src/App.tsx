@@ -1,12 +1,13 @@
-import { useReducer, useState } from "react";
+import { useEffect, useReducer, useRef, useState } from "react";
 import { ActionPanel } from "./components/ActionPanel";
 import { BottleView } from "./components/BottleView";
 import { CustomerCardView } from "./components/CustomerCardView";
 import { DiceDraft } from "./components/DiceDraft";
 import { LogPanel } from "./components/LogPanel";
 import { NoteGuide } from "./components/NoteGuide";
-import { RulesPanel } from "./components/RulesPanel";
+import { RulebookModal, RulesPanel } from "./components/RulesPanel";
 import { Scoreboard } from "./components/Scoreboard";
+import { SettlementModal } from "./components/SettlementModal";
 import { gameReducer } from "./game/reducer";
 import { createInitialState } from "./game/rules";
 import type { GameAction } from "./game/types";
@@ -18,19 +19,43 @@ function generateRandomSeed(): number {
 }
 
 export default function App() {
-  const [state, dispatch] = useReducer(gameReducer, undefined, () => createInitialState(20260710));
+  const [state, dispatch] = useReducer(gameReducer, undefined, () => createInitialState(generateRandomSeed()));
   const [seedInput, setSeedInput] = useState(String(state.seed));
+  const [showRulebook, setShowRulebook] = useState(true);
+  const [showSettlement, setShowSettlement] = useState(false);
+  const previousPhase = useRef(state.phase);
 
   function applyPlayerAction(action: GameAction) {
     dispatch(action);
   }
 
   function restartWithSeed(seed: number) {
+    setShowSettlement(false);
     applyPlayerAction({ type: "start", seed });
   }
 
+  useEffect(() => {
+    if (previousPhase.current !== "finished" && state.phase === "finished") {
+      setShowSettlement(true);
+    }
+    previousPhase.current = state.phase;
+  }, [state.phase]);
+
   return (
     <main className="app">
+      <RulebookModal open={showRulebook} onClose={() => setShowRulebook(false)} />
+      <SettlementModal
+        open={showSettlement}
+        score={state.score}
+        seed={state.seed}
+        onClose={() => setShowSettlement(false)}
+        onRestartRandom={() => {
+          const nextSeed = generateRandomSeed();
+          setSeedInput(String(nextSeed));
+          restartWithSeed(nextSeed);
+        }}
+      />
+
       <section className="frame">
         <div className="ornament ornament--tl" aria-hidden="true" />
         <div className="ornament ornament--br" aria-hidden="true" />
@@ -43,7 +68,7 @@ export default function App() {
             </div>
             <span className="brand__slash" aria-hidden="true" />
             <p className="hero-copy">
-              以 10 轮构筑两瓶香水，在长链、重复、顾客奖励与腐朽风险之间寻找最优封瓶时机。
+              在 10 回合里调制两瓶香水，在顺序链、重复浓度、顾客奖励与腐朽风险之间寻找最优封瓶时机。
             </p>
           </div>
 
@@ -67,17 +92,27 @@ export default function App() {
             onSubmit={(event) => {
               event.preventDefault();
               const parsed = Number(seedInput);
-              const nextSeed = parsed === -1 ? generateRandomSeed() : Number.isFinite(parsed) ? parsed : 20260710;
+              const nextSeed = Number.isFinite(parsed) ? parsed : 20260710;
               setSeedInput(String(nextSeed));
               restartWithSeed(nextSeed);
             }}
           >
             <label>
-              Seed / 输入 `-1` 随机开局
+              Seed / 输入种子
               <input value={seedInput} onChange={(event) => setSeedInput(event.target.value)} inputMode="numeric" />
             </label>
             <button className="primary" type="submit">
-              重新开局
+              使用种子开局
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const nextSeed = generateRandomSeed();
+                setSeedInput(String(nextSeed));
+                restartWithSeed(nextSeed);
+              }}
+            >
+              随机开局
             </button>
           </form>
         </section>
@@ -92,10 +127,10 @@ export default function App() {
               onFinishSealPhase={() => applyPlayerAction({ type: "finishSealPhase" })}
               onFinishGame={() => applyPlayerAction({ type: "finishGame" })}
             />
-            <RulesPanel />
+            <RulesPanel onOpenRulebook={() => setShowRulebook(true)} />
           </aside>
 
-          <section className="workbench" aria-label="香气调制工作台">
+          <section className="workbench" aria-label="香水调制工作台">
             <div className="vessels">
               <BottleView bottle={state.bottles[0]} slotIndex={0} />
               <BottleView bottle={state.bottles[1]} slotIndex={1} />

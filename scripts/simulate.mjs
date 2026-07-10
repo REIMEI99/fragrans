@@ -1,3 +1,5 @@
+import { writeFileSync } from "node:fs";
+
 const INGREDIENTS = ["citrus", "green", "floral", "fruit", "wood", "spice"];
 
 const INGREDIENT_INFO = {
@@ -10,7 +12,7 @@ const INGREDIENT_INFO = {
 };
 
 const BASE_SCORE_BY_COUNT = { 3: 1, 4: 2, 5: 4, 6: 6 };
-const ORDER_SCORE_BY_LENGTH = { 2: 1, 3: 2, 4: 3, 5: 5, 6: 8 };
+const ORDER_SCORE_BY_LENGTH = { 2: 1, 3: 2, 4: 3, 5: 5, 6: 7 };
 const DENSITY_SCORE_BY_REPEAT = { 2: 1, 3: 3, 4: 5, 5: 7, 6: 10 };
 
 const CUSTOMER_CARDS = [
@@ -640,6 +642,7 @@ function parseArgs(argv) {
     games: 500,
     baseSeed: 20260711,
     strategies: ["random", "safe", "tempo", "greedy", "growth", "customer", "order", "density", "rot"],
+    benchmarkOut: null,
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -653,6 +656,9 @@ function parseArgs(argv) {
     } else if (arg === "--strategies") {
       options.strategies = argv[index + 1].split(",").map((item) => item.trim()).filter(Boolean);
       index += 1;
+    } else if (arg === "--benchmark-out") {
+      options.benchmarkOut = argv[index + 1];
+      index += 1;
     }
   }
 
@@ -660,7 +666,13 @@ function parseArgs(argv) {
 }
 
 function main() {
-  const { games, baseSeed, strategies } = parseArgs(process.argv.slice(2));
+  const { games, baseSeed, strategies, benchmarkOut } = parseArgs(process.argv.slice(2));
+  const benchmark = {
+    gamesPerStrategy: games,
+    baseSeed,
+    strategies: {},
+    combinedScores: [],
+  };
 
   console.log(`Simulating ${games} games per strategy from base seed ${baseSeed}...`);
   for (const strategy of strategies) {
@@ -679,6 +691,27 @@ function main() {
         `max=${summary.max}`,
       ].join("  "),
     );
+
+    benchmark.strategies[strategy] = {
+      summary,
+      scores,
+    };
+    benchmark.combinedScores.push(...scores);
+  }
+
+  if (benchmarkOut) {
+    const sortedCombinedScores = [...benchmark.combinedScores].sort((left, right) => left - right);
+    const payload = {
+      gamesPerStrategy: benchmark.gamesPerStrategy,
+      baseSeed: benchmark.baseSeed,
+      strategyNames: strategies,
+      combinedScores: sortedCombinedScores,
+      summaries: Object.fromEntries(
+        Object.entries(benchmark.strategies).map(([strategy, data]) => [strategy, data.summary]),
+      ),
+    };
+    writeFileSync(benchmarkOut, JSON.stringify(payload, null, 2));
+    console.log(`Benchmark data written to ${benchmarkOut}`);
   }
 }
 

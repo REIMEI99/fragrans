@@ -33,7 +33,7 @@ export const ORDER_SCORE_BY_LENGTH: Record<number, number> = {
   3: 2,
   4: 3,
   5: 5,
-  6: 8,
+  6: 7,
 };
 
 export const DENSITY_SCORE_BY_REPEAT: Record<number, number> = {
