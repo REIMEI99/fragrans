@@ -38,12 +38,13 @@ export function cloneBottle(bottle: Bottle): Bottle {
 }
 
 export function createInitialState(seed = 20260711): GameState {
-  const [deck, nextSeed] = shuffleWithSeed(CUSTOMER_CARDS, seed >>> 0);
+  const normalizedSeed = seed >>> 0;
+  const [deck, nextSeed] = shuffleWithSeed(CUSTOMER_CARDS, normalizedSeed);
   const [dice, rngState] = rollDice(nextSeed, 4);
 
   return {
     phase: "choose",
-    seed: seed >>> 0,
+    seed: normalizedSeed,
     rngState,
     round: 1,
     maxRounds: 10,
@@ -55,7 +56,7 @@ export function createInitialState(seed = 20260711): GameState {
     rolledDice: dice,
     chosenDice: [],
     pendingDice: [],
-    log: [{ id: crypto.randomUUID(), text: `使用种子 ${seed >>> 0} 开局。` }],
+    log: [{ id: crypto.randomUUID(), text: `使用种子 ${normalizedSeed} 开局。` }],
   };
 }
 
@@ -81,6 +82,7 @@ export function placeIngredient(bottle: Bottle, ingredient: Ingredient): Bottle 
   if (slotIndex === -1) {
     throw new Error("Bottle is full");
   }
+
   next.slots[slotIndex] = { ingredient, state: "filled" };
   if (filledCount(next) >= 3 && next.stage === "none") {
     next.stage = "fresh";
@@ -197,9 +199,7 @@ export function scoreBottle(
 
 export function bottleSummary(bottle: Bottle): string {
   return bottle.slots
-    .map((slot, index) =>
-      slot.ingredient ? `${index + 1}:${INGREDIENT_INFO[slot.ingredient].label}` : `${index + 1}:空`,
-    )
+    .map((slot, index) => (slot.ingredient ? `${index + 1}:${INGREDIENT_INFO[slot.ingredient].label}` : `${index + 1}:空`))
     .join(" | ");
 }
 

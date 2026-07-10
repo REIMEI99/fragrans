@@ -30,62 +30,89 @@ export default function App() {
   }
 
   return (
-    <main className="app-shell">
-      <section className="hero">
-        <div>
-          <p className="kicker">Fragrans Prototype</p>
-          <h1>余香</h1>
-          <p className="hero-copy">
-            这是一个先验证规则张力的 React 原型。重点不是美术，而是观察“多等一轮值不值”以及“顾客会不会改变封瓶时机”。
-          </p>
-        </div>
-        <form
-          className="seed-form"
-          onSubmit={(event) => {
-            event.preventDefault();
-            const parsed = Number(seedInput);
-            const nextSeed = parsed === -1 ? generateRandomSeed() : Number.isFinite(parsed) ? parsed : 20260710;
-            setSeedInput(String(nextSeed));
-            restartWithSeed(nextSeed);
-          }}
-        >
-          <label>
-            固定种子（输入 -1 为随机）
-            <input value={seedInput} onChange={(event) => setSeedInput(event.target.value)} inputMode="numeric" />
-          </label>
-          <button className="primary" type="submit">
-            重新开局
-          </button>
-        </form>
-      </section>
+    <main className="app">
+      <section className="frame">
+        <div className="ornament ornament--tl" aria-hidden="true" />
+        <div className="ornament ornament--br" aria-hidden="true" />
 
-      <NoteGuide />
-      <RulesPanel />
-      <Scoreboard state={state} />
+        <header className="topbar">
+          <div className="brand">
+            <div>
+              <p className="kicker">Fragrans Prototype</p>
+              <h1>余香</h1>
+            </div>
+            <span className="brand__slash" aria-hidden="true" />
+            <p className="hero-copy">
+              以 10 轮构筑两瓶香水，在长链、重复、顾客奖励与腐朽风险之间寻找最优封瓶时机。
+            </p>
+          </div>
 
-      <section className="top-grid">
-        <CustomerCardView customers={state.currentCustomers} />
-        <DiceDraft
-          state={state}
-          onToggle={(index) => applyPlayerAction({ type: "toggleDie", index })}
-          onConfirm={() => applyPlayerAction({ type: "confirmChoice" })}
-        />
-      </section>
+          <div className="meta">
+            <div className="meta-block">
+              <span className="meta-label">Collection Round</span>
+              <strong className="meta-value">
+                {Math.min(state.round, state.maxRounds).toString().padStart(2, "0")} / {state.maxRounds}
+              </strong>
+            </div>
+            <div className="meta-block">
+              <span className="meta-label">Current Score</span>
+              <strong className="meta-value">{state.score.toString().padStart(3, "0")}</strong>
+            </div>
+          </div>
+        </header>
 
-      <section className="workspace-grid">
-        <BottleView bottle={state.bottles[0]} slotIndex={0} />
-        <BottleView bottle={state.bottles[1]} slotIndex={1} />
-      </section>
+        <section className="seed-bar">
+          <form
+            className="seed-form"
+            onSubmit={(event) => {
+              event.preventDefault();
+              const parsed = Number(seedInput);
+              const nextSeed = parsed === -1 ? generateRandomSeed() : Number.isFinite(parsed) ? parsed : 20260710;
+              setSeedInput(String(nextSeed));
+              restartWithSeed(nextSeed);
+            }}
+          >
+            <label>
+              Seed / 输入 `-1` 随机开局
+              <input value={seedInput} onChange={(event) => setSeedInput(event.target.value)} inputMode="numeric" />
+            </label>
+            <button className="primary" type="submit">
+              重新开局
+            </button>
+          </form>
+        </section>
 
-      <section className="bottom-grid">
-        <ActionPanel
-          state={state}
-          onPlaceDie={(draftIndex, bottleIndex) => applyPlayerAction({ type: "placeDie", draftIndex, bottleIndex })}
-          onSealBottle={(bottleIndex) => applyPlayerAction({ type: "sealBottle", bottleIndex })}
-          onFinishSealPhase={() => applyPlayerAction({ type: "finishSealPhase" })}
-          onFinishGame={() => applyPlayerAction({ type: "finishGame" })}
-        />
-        <LogPanel log={state.log} />
+        <section className="layout">
+          <aside className="sidebar">
+            <CustomerCardView customers={state.currentCustomers} />
+            <ActionPanel
+              state={state}
+              onPlaceDie={(draftIndex, bottleIndex) => applyPlayerAction({ type: "placeDie", draftIndex, bottleIndex })}
+              onSealBottle={(bottleIndex) => applyPlayerAction({ type: "sealBottle", bottleIndex })}
+              onFinishSealPhase={() => applyPlayerAction({ type: "finishSealPhase" })}
+              onFinishGame={() => applyPlayerAction({ type: "finishGame" })}
+            />
+            <RulesPanel />
+          </aside>
+
+          <section className="workbench" aria-label="香气调制工作台">
+            <div className="vessels">
+              <BottleView bottle={state.bottles[0]} slotIndex={0} />
+              <BottleView bottle={state.bottles[1]} slotIndex={1} />
+            </div>
+            <DiceDraft
+              state={state}
+              onToggle={(index) => applyPlayerAction({ type: "toggleDie", index })}
+              onConfirm={() => applyPlayerAction({ type: "confirmChoice" })}
+            />
+          </section>
+
+          <aside className="sidebar">
+            <Scoreboard state={state} />
+            <NoteGuide />
+            <LogPanel log={state.log} />
+          </aside>
+        </section>
       </section>
     </main>
   );

@@ -6,7 +6,7 @@ interface LogPanelProps {
 
 export function LogPanel({ log }: LogPanelProps) {
   return (
-    <section className="panel log-panel">
+    <section className="panel panel-compact">
       <div className="panel-header">
         <h2>回合日志</h2>
       </div>

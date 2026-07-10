@@ -1,35 +1,31 @@
 import { INGREDIENT_INFO } from "../game/data";
 
-const LAYER_INGREDIENTS = {
-  top: ["citrus", "green"],
-  middle: ["floral", "fruit"],
-  base: ["wood", "spice"],
+const GROUPS = {
+  light: ["citrus", "green"],
+  mid: ["floral", "fruit"],
+  heavy: ["wood", "spice"],
 } as const;
 
-const LAYER_LABELS = {
-  top: "淡香材",
-  middle: "中香材",
-  base: "浓香材",
+const TITLES = {
+  light: "淡香材",
+  mid: "中香材",
+  heavy: "浓香材",
 } as const;
 
 export function NoteGuide() {
   return (
-    <section className="panel note-guide">
+    <section className="panel panel-compact">
       <div className="panel-header">
         <h2>香调图鉴</h2>
-        <span className="muted">可自由落位；放到对应区段时拿顺调分</span>
       </div>
       <div className="guide-grid">
-        {(Object.keys(LAYER_INGREDIENTS) as Array<keyof typeof LAYER_INGREDIENTS>).map((layer) => (
-          <div key={layer} className="guide-card">
-            <span className="eyebrow">{LAYER_LABELS[layer]}</span>
+        {(Object.keys(GROUPS) as Array<keyof typeof GROUPS>).map((group) => (
+          <div key={group} className="guide-card">
+            <div className="eyebrow">{TITLES[group]}</div>
             <div className="guide-items">
-              {LAYER_INGREDIENTS[layer].map((ingredient) => (
+              {GROUPS[group].map((ingredient) => (
                 <div key={ingredient} className="guide-item">
-                  <span
-                    className="slot-dot"
-                    style={{ background: INGREDIENT_INFO[ingredient].color }}
-                  />
+                  <span className="slot-dot" style={{ background: INGREDIENT_INFO[ingredient].color }} />
                   <span>{INGREDIENT_INFO[ingredient].label}</span>
                 </div>
               ))}

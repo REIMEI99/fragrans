@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<!-- saved from url=(0040)https://web-sandbox.oaiusercontent.com/? -->
+<html lang="zh-CN"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>余香 · Lingering Fragrance</title>
+  <style>
+    :root{
+      --paper:#f8f5f0;
+      --panel:#fbfaf7;
+      --ink:#182235;
+      --muted:#7d8794;
+      --gold:#c99d4e;
+      --gold-soft:#e5cfaa;
+      --line:#ebe5dc;
+      --card:#fffdfa;
+      --shadow:0 12px 36px rgba(55,47,35,.05);
+      --serif:"Bodoni 72","Didot","Baskerville","Times New Roman","Noto Serif SC",serif;
+      --sans:Inter,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+    }
+
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;background:var(--paper);color:var(--ink)}
+    body{font-family:var(--sans);letter-spacing:.01em}
+
+    button{font:inherit;color:inherit}
+    .app{
+      position:relative;
+      min-height:100vh;
+      overflow:hidden;
+      padding:18px;
+      background:
+        radial-gradient(circle at 48% 48%,rgba(255,255,255,.55),transparent 42%),
+        var(--paper);
+    }
+
+    .frame{
+      position:relative;
+      min-height:calc(100vh - 36px);
+      border:1px solid var(--gold-soft);
+      padding:42px 54px 36px;
+      overflow:hidden;
+    }
+
+    /* 装饰线 */
+    .ornament{
+      position:absolute;
+      pointer-events:none;
+      color:var(--gold-soft);
+      opacity:.92;
+    }
+    .ornament svg{width:100%;height:100%;display:block}
+    .ornament path,.ornament circle{
+      fill:none;stroke:currentColor;stroke-width:1.1;vector-effect:non-scaling-stroke
+    }
+    .ornament--tl{width:300px;height:300px;left:-35px;top:-34px}
+    .ornament--br{width:410px;height:410px;right:-48px;bottom:-68px}
+
+    .topbar{
+      position:relative;
+      z-index:2;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:32px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:22px;
+      margin-left:10px;
+    }
+    .brand__cn{
+      font:400 clamp(34px,3vw,48px)/1 var(--serif);
+      letter-spacing:.16em;
+      white-space:nowrap;
+    }
+    .brand__slash{
+      width:1px;height:46px;background:var(--gold-soft);transform:rotate(27deg);
+    }
+
+    .meta{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(150px,1fr));
+      gap:44px;
+      margin-top:2px;
+      min-width:350px;
+    }
+    .meta__label,
+    .eyebrow,
+    .legend__title,
+    .action__label{
+      font-size:10px;
+      letter-spacing:.34em;
+      text-transform:uppercase;
+      color:var(--muted);
+    }
+    .meta__value{
+      margin-top:16px;
+      font:400 21px/1 var(--serif);
+      letter-spacing:.08em;
+    }
+
+    .layout{
+      position:relative;
+      z-index:2;
+      display:grid;
+      grid-template-columns:minmax(255px,340px) minmax(580px,1fr) minmax(180px,230px);
+      gap:clamp(26px,4vw,72px);
+      align-items:center;
+      min-height:640px;
+      padding-top:72px;
+    }
+
+    .briefs{align-self:center}
+    .brief{
+      max-width:340px;
+      margin-bottom:44px;
+      padding-left:24px;
+      border-left:1px solid var(--gold);
+    }
+    .brief:last-child{margin-bottom:0}
+    .brief h2{
+      margin:7px 0 15px;
+      font:400 23px/1.05 var(--serif);
+    }
+    .brief p{
+      margin:0;
+      max-width:320px;
+      color:#9098a1;
+      font-size:12px;
+      line-height:1.72;
+    }
+
+    .workbench{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      min-width:0;
+    }
+
+    .vessels{
+      width:100%;
+      display:grid;
+      grid-template-columns:repeat(2,minmax(190px,1fr));
+      justify-items:center;
+      gap:clamp(54px,9vw,130px);
+      padding:0 22px;
+    }
+
+    .vessel-wrap{width:100%;max-width:255px;text-align:center}
+    .vessel-neck{
+      width:2px;height:27px;background:var(--gold);margin:0 auto;
+    }
+    .vessel{
+      position:relative;
+      height:305px;
+      border:1px solid var(--gold);
+      border-radius:90px 90px 22px 22px;
+      overflow:hidden;
+      background:rgba(255,255,255,.18);
+    }
+    .vessel::after{
+      content:"";
+      position:absolute;inset:0;
+      background:linear-gradient(to top,rgba(231,219,197,.12),transparent 60%);
+      pointer-events:none;
+    }
+    .vessel__slot{
+      height:calc(100% / 6);
+      display:grid;
+      grid-template-columns:1fr auto;
+      align-items:center;
+      padding:0 25px 0 23px;
+      border-bottom:1px solid var(--line);
+      color:#8c949c;
+      font:400 10px/1 var(--serif);
+    }
+    .vessel__slot:last-child{border-bottom:0}
+    .vessel__dot{
+      width:12px;height:12px;border:1px solid var(--gold);border-radius:50%;
+      background:transparent;
+      transition:.25s ease;
+    }
+    .vessel__slot.is-filled .vessel__dot{
+      background:var(--slot-color,var(--gold-soft));
+      box-shadow:0 0 0 4px rgba(201,157,78,.08);
+    }
+    .vessel-name{
+      margin-top:23px;
+      font-size:10px;
+      letter-spacing:.32em;
+      text-transform:uppercase;
+      color:#808895;
+    }
+
+    .cards{
+      position:relative;
+      z-index:3;
+      display:flex;
+      justify-content:center;
+      gap:28px;
+      width:100%;
+      margin-top:-10px;
+      flex-wrap:wrap;
+    }
+    .essence-card{
+      width:120px;height:160px;
+      border:1px solid #ece9e4;
+      background:rgba(255,255,255,.86);
+      box-shadow:0 10px 30px rgba(36,31,26,.035);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      padding:18px 13px 15px;
+      cursor:pointer;
+      transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease;
+      user-select:none;
+    }
+    .essence-card:hover{transform:translateY(-4px);box-shadow:var(--shadow)}
+    .essence-card.is-selected{
+      border-color:var(--gold);
+      transform:translateY(-8px);
+      box-shadow:0 14px 34px rgba(104,79,32,.10);
+    }
+    .essence-card__type{
+      font-size:8px;
+      letter-spacing:.30em;
+      text-transform:uppercase;
+      color:#7f8994;
+    }
+    .essence-card__swatch{
+      width:40px;height:40px;border-radius:50%;
+      border:1px solid var(--gold);
+      margin:28px 0 26px;
+      background:var(--swatch);
+    }
+    .essence-card__name{
+      margin-top:auto;
+      font:400 15px/1 var(--serif);
+    }
+
+    .action{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:30px;
+      margin-top:42px;
+    }
+    .action__label{white-space:nowrap}
+    .seal-btn{
+      min-width:182px;
+      height:40px;
+      border:1px solid var(--gold);
+      background:transparent;
+      color:#a9772e;
+      font-size:10px;
+      letter-spacing:.34em;
+      text-transform:uppercase;
+      cursor:pointer;
+      transition:.2s ease;
+    }
+    .seal-btn:hover:not(:disabled){background:var(--gold);color:white}
+    .seal-btn:disabled{opacity:.38;cursor:not-allowed}
+
+    .legend{
+      align-self:center;
+      text-align:right;
+      padding-right:4px;
+    }
+    .legend__title{margin-bottom:20px}
+    .legend ul{list-style:none;margin:0;padding:0}
+    .legend li{
+      margin:0 0 13px;
+      color:#7f8992;
+      font-size:11px;
+      letter-spacing:.06em;
+    }
+
+    .toast{
+      position:fixed;
+      left:50%;bottom:34px;
+      transform:translate(-50%,16px);
+      padding:12px 18px;
+      border:1px solid var(--gold-soft);
+      background:rgba(251,250,247,.94);
+      box-shadow:var(--shadow);
+      font-size:12px;
+      color:#6f7680;
+      opacity:0;
+      pointer-events:none;
+      transition:.25s ease;
+      z-index:10;
+      backdrop-filter:blur(10px);
+    }
+    .toast.is-visible{opacity:1;transform:translate(-50%,0)}
+
+    @media (max-width:1180px){
+      .frame{padding:34px 34px 28px}
+      .layout{
+        grid-template-columns:245px minmax(520px,1fr);
+        gap:36px;
+      }
+      .legend{
+        position:absolute;
+        right:0;top:80px;
+        text-align:right;
+        transform:translateY(-50%);
+      }
+      .vessels{gap:55px}
+    }
+
+    @media (max-width:900px){
+      .app{padding:10px}
+      .frame{min-height:calc(100vh - 20px);padding:28px 22px}
+      .topbar{flex-direction:column}
+      .meta{align-self:stretch;min-width:0;gap:24px}
+      .layout{
+        display:flex;
+        flex-direction:column;
+        align-items:stretch;
+        min-height:0;
+        padding-top:55px;
+      }
+      .briefs{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+      .brief{margin:0}
+      .legend{
+        position:static;
+        transform:none;
+        order:3;
+        text-align:left;
+        margin-top:34px;
+      }
+      .legend ul{display:flex;flex-wrap:wrap;gap:8px 18px}
+      .legend li{margin:0}
+      .workbench{order:2}
+    }
+
+    @media (max-width:620px){
+      .brand__cn{font-size:32px}
+      .meta{grid-template-columns:1fr 1fr}
+      .layout{padding-top:42px}
+      .briefs{grid-template-columns:1fr}
+      .vessels{gap:18px;padding:0}
+      .vessel{height:260px}
+      .vessel__slot{padding:0 16px}
+      .cards{gap:12px;margin-top:24px}
+      .essence-card{width:calc(50% - 8px);max-width:145px}
+      .action{flex-direction:column;gap:15px}
+      .ornament--br{width:260px;height:260px}
+    }
+  </style>
+<style>html,body,#root{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;margin:0;padding:0}html,body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen,Ubuntu,Cantarell,Helvetica Neue,Arial,sans-serif!important}button,input,textarea,select{font-family:inherit}html{background-color:transparent}html.chatgptOled.dark,html.mobileSkybridge.dark{background-color:#000}@supports (font: -apple-system-body){html.mobileSkybridge{font:-apple-system-body}}html.desktopSkybridge.dark{background-color:#1e1e1e}html.transparentSkybridgeBackground,html.transparentSkybridgeBackground.dark{background-color:transparent}html.androidSkybridge,html.androidSkybridge body,html.androidSkybridge *{-webkit-tap-highlight-color:rgba(255,255,255,0)}html.androidSkybridge *::selection,html.androidSkybridge *::-moz-selection{background:#fff0;color:inherit}</style></head>
+
+<body>
+  <main class="app">
+    <section class="frame">
+      <div class="ornament ornament--tl" aria-hidden="true">
+        <svg viewBox="0 0 300 300">
+          <path d="M34 290C90 235 63 166 51 121C38 71 63 34 103 25C147 15 167 66 222 72C249 75 271 67 290 56"></path>
+          <circle cx="164" cy="22" r="5"></circle>
+        </svg>
+      </div>
+
+      <div class="ornament ornament--br" aria-hidden="true">
+        <svg viewBox="0 0 410 410">
+          <path d="M408 41C298 57 291 139 286 230C282 307 286 354 224 409"></path>
+          <path d="M145 310C182 272 220 272 258 310C220 347 182 347 145 310Z"></path>
+          <path d="M258 310C296 272 334 272 372 310C334 347 296 347 258 310Z"></path>
+        </svg>
+      </div>
+
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand__cn">余 香</div>
+          <span class="brand__slash" aria-hidden="true"></span>
+        </div>
+
+        <div class="meta">
+          <div>
+            <div class="meta__label">Collection round</div>
+            <div class="meta__value" id="roundValue">01 / 08</div>
+          </div>
+          <div>
+            <div class="meta__label">Essence value</div>
+            <div class="meta__value" id="essenceValue">000</div>
+          </div>
+        </div>
+      </header>
+
+      <div class="layout">
+        <aside class="briefs">
+          <article class="brief">
+            <div class="eyebrow">01. Preference</div>
+            <h2>Madame L’Air</h2>
+            <p>Woody finish required. Minimal 3 Floral layers. Sequence multipliers active.</p>
+          </article>
+
+          <article class="brief">
+            <div class="eyebrow">02. Commission</div>
+            <h2>The Alchemist</h2>
+            <p>Gradient request: Citrus → Green → Floral. Higher concentration rewarded.</p>
+          </article>
+        </aside>
+
+        <section class="workbench" aria-label="香气调制工作台">
+          <div class="vessels">
+            <div class="vessel-wrap">
+              <div class="vessel-neck"></div>
+              <div class="vessel" data-vessel="0">
+                <div class="vessel__slot"><span>I</span><i class="vessel__dot"></i></div>
+                <div class="vessel__slot"><span>II</span><i class="vessel__dot"></i></div>
+                <div class="vessel__slot"><span>III</span><i class="vessel__dot"></i></div>
+                <div class="vessel__slot"><span>IV</span><i class="vessel__dot"></i></div>
+                <div class="vessel__slot"><span>V</span><i class="vessel__dot"></i></div>
+                <div class="vessel__slot"><span>VI</span><i class="vessel__dot"></i></div>
+              </div>
+              <div class="vessel-name">I · Alabaster</div>
+            </div>
+
+            <div class="vessel-wrap">
+              <div class="vessel-neck"></div>
+              <div class="vessel" data-vessel="1">
+                <div class="vessel__slot"><span>I</span><i class="vessel__dot"></i></div>
+                <div class="vessel__slot"><span>II</span><i class="vessel__dot"></i></div>
+                <div class="vessel__slot"><span>III</span><i class="vessel__dot"></i></div>
+                <div class="vessel__slot"><span>IV</span><i class="vessel__dot"></i></div>
+                <div class="vessel__slot"><span>V</span><i class="vessel__dot"></i></div>
+                <div class="vessel__slot"><span>VI</span><i class="vessel__dot"></i></div>
+              </div>
+              <div class="vessel-name">II · Gossamer</div>
+            </div>
+          </div>
+
+          <div class="cards" id="cards">
+            <button class="essence-card" data-name="Citrus" data-value="18" data-color="#f1e8c9" style="--swatch:#f1e8c9">
+              <span class="essence-card__type">Citrus</span>
+              <span class="essence-card__swatch"></span>
+              <span class="essence-card__name">Citrus</span>
+            </button>
+
+            <button class="essence-card" data-name="Fruity" data-value="16" data-color="#edc5b6" style="--swatch:#edc5b6">
+              <span class="essence-card__type">Fruity</span>
+              <span class="essence-card__swatch"></span>
+              <span class="essence-card__name">Fruity</span>
+            </button>
+
+            <button class="essence-card" data-name="Woody" data-value="22" data-color="#c8bdb2" style="--swatch:#c8bdb2">
+              <span class="essence-card__type">Wood</span>
+              <span class="essence-card__swatch"></span>
+              <span class="essence-card__name">Woody</span>
+            </button>
+
+            <button class="essence-card" data-name="Woody" data-value="22" data-color="#c8bdb2" style="--swatch:#c8bdb2">
+              <span class="essence-card__type">Wood</span>
+              <span class="essence-card__swatch"></span>
+              <span class="essence-card__name">Woody</span>
+            </button>
+          </div>
+
+          <div class="action">
+            <div class="action__label">Action: Extract two essences</div>
+            <button class="seal-btn" id="sealButton" disabled="">Seal Vessel</button>
+          </div>
+        </section>
+
+        <aside class="legend">
+          <div class="legend__title">Extraction logic</div>
+          <ul>
+            <li>CITRUS / 柑橘</li>
+            <li>GREEN / 绿叶</li>
+            <li>FLORAL / 花香</li>
+            <li>FRUITY / 果香</li>
+            <li>WOODY / 木质</li>
+            <li>SPICY / 辛香</li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+
+    <div class="toast" id="toast">Essence sealed.</div>
+  </main>
+
+  <script>
+    const cards = [...document.querySelectorAll(".essence-card")];
+    const sealButton = document.getElementById("sealButton");
+    const essenceValue = document.getElementById("essenceValue");
+    const roundValue = document.getElementById("roundValue");
+    const toast = document.getElementById("toast");
+    const slots = [...document.querySelectorAll(".vessel__slot")];
+
+    let round = 1;
+    let score = 0;
+    let filled = 0;
+
+    function selectedCards(){
+      return cards.filter(card => card.classList.contains("is-selected"));
+    }
+
+    function updateSelection(){
+      const selected = selectedCards();
+      sealButton.disabled = selected.length !== 2;
+      cards.forEach(card => {
+        const lock = selected.length >= 2 && !card.classList.contains("is-selected");
+        card.style.opacity = lock ? ".42" : "1";
+      });
+    }
+
+    cards.forEach(card => {
+      card.addEventListener("click", () => {
+        const selected = selectedCards();
+        const isSelected = card.classList.contains("is-selected");
+
+        if (!isSelected && selected.length >= 2) return;
+        card.classList.toggle("is-selected");
+        updateSelection();
+      });
+    });
+
+    sealButton.addEventListener("click", () => {
+      const selected = selectedCards();
+      if (selected.length !== 2) return;
+
+      selected.forEach((card, index) => {
+        const slot = slots[filled + index];
+        if (!slot) return;
+        slot.classList.add("is-filled");
+        slot.style.setProperty("--slot-color", card.dataset.color);
+      });
+
+      filled = Math.min(filled + selected.length, slots.length);
+      score += selected.reduce((sum, card) => sum + Number(card.dataset.value), 0);
+      essenceValue.textContent = String(score).padStart(3, "0");
+
+      round = Math.min(round + 1, 8);
+      roundValue.textContent = String(round).padStart(2, "0") + " / 08";
+
+      selected.forEach(card => card.classList.remove("is-selected"));
+      updateSelection();
+
+      toast.textContent = "已封存：" + selected.map(card => card.dataset.name).join(" + ");
+      toast.classList.add("is-visible");
+      setTimeout(() => toast.classList.remove("is-visible"), 1800);
+    });
+  </script>
+
+</body></html>

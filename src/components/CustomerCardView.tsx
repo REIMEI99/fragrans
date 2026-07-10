@@ -6,17 +6,19 @@ interface CustomerCardViewProps {
 
 export function CustomerCardView({ customers }: CustomerCardViewProps) {
   return (
-    <section className="panel customer-card">
+    <section className="panel panel-compact">
       <div className="panel-header">
         <h2>公共顾客池</h2>
+        <span className="eyebrow">+4 / 卡</span>
       </div>
       {customers.length > 0 ? (
         <div className="customer-stack">
-          {customers.map((customer) => (
+          {customers.map((customer, index) => (
             <div key={customer.id} className="customer-item">
+              <div className="eyebrow">Commission {String(index + 1).padStart(2, "0")}</div>
               <p className="customer-title">{customer.title}</p>
               <p className="customer-text">{customer.text}</p>
-              <span className="customer-points">奖励 +4</span>
+              <span className="customer-points">完成即离场</span>
             </div>
           ))}
         </div>
