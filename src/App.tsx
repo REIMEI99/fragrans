@@ -68,7 +68,7 @@ export default function App() {
             </div>
             <span className="brand__slash" aria-hidden="true" />
             <p className="hero-copy">
-              在 10 回合里调制两瓶香水，在顺序链、重复浓度、顾客奖励与腐朽风险之间寻找最优封瓶时机。
+              在 10 回合里调制香水，在顺序链、重复浓度、顾客奖励与腐朽风险之间寻找最优封瓶时机。
             </p>
           </div>
 
