@@ -12,7 +12,7 @@ export type SlotState = "empty" | "filled";
 
 export type BottleStage = "none" | "fresh" | "faded";
 
-export type Phase = "choose" | "place" | "seal" | "finalAutoSeal" | "finished";
+export type Phase = "choose" | "place" | "seal" | "finished";
 
 export interface Slot {
   ingredient: Ingredient | null;
@@ -87,5 +87,4 @@ export type GameAction =
   | { type: "confirmChoice" }
   | { type: "placeDie"; draftIndex: number; bottleIndex: 0 | 1 }
   | { type: "sealBottle"; bottleIndex: 0 | 1 }
-  | { type: "finishSealPhase" }
-  | { type: "finishGame" };
+  | { type: "finishSealPhase" };

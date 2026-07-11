@@ -61,7 +61,9 @@ function sealBottleInternal(state: GameState, bottleIndex: 0 | 1, withCustomer: 
 
   return log(
     next,
-    `${bottle.label} 封瓶：基础 ${score.base}，排列 ${score.order}，浓度 ${score.density}${withCustomer ? `，顾客 ${score.customer}` : ""}，腐朽 -${score.rotPenalty}，总计 ${score.total}。${bottleSummary(bottle)}`,
+    `${bottle.label}封瓶：基础 ${score.base}，排列 ${score.order}，浓度 ${score.density}${
+      withCustomer ? `，顾客 ${score.customer}` : ""
+    }，腐朽 -${score.rotPenalty}，总计 ${score.total}。${bottleSummary(bottle)}`,
   );
 }
 
@@ -77,13 +79,23 @@ function applyRoundEnd(state: GameState): GameState {
   const current = { ...state, bottles };
 
   if (current.round >= current.maxRounds) {
-    return {
+    let settled: GameState = {
       ...current,
-      phase: "finalAutoSeal",
       currentCustomers: [],
       rolledDice: [],
       chosenDice: [],
       pendingDice: [],
+    };
+
+    for (const index of [0, 1] as const) {
+      if (settled.bottles[index]) {
+        settled = sealBottleInternal(settled, index, false);
+      }
+    }
+
+    return {
+      ...log(settled, `第 ${state.maxRounds} 回合结束后已自动封瓶。最终总分 ${settled.score}。`),
+      phase: "finished",
     };
   }
 
@@ -130,7 +142,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       const currentBottle = state.bottles[action.bottleIndex] ?? createBottle(action.bottleIndex);
 
       if (!canPlaceIngredient(currentBottle)) {
-        return log(state, `${currentBottle.label} 已满，不能继续放置。`);
+        return log(state, `${currentBottle.label}已满，不能继续放置。`);
       }
 
       const placedBottle = placeIngredient(currentBottle, ingredient);
@@ -144,7 +156,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
           pendingDice,
           phase: pendingDice.length === 0 ? "seal" : "place",
         },
-        `${INGREDIENT_INFO[ingredient].label} 放入 ${placedBottle.label} 的第 ${slotNumber} 格。`,
+        `${INGREDIENT_INFO[ingredient].label}放入${placedBottle.label}的第 ${slotNumber} 格。`,
       );
     }
 
@@ -158,25 +170,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       if (state.phase !== "seal") {
         return state;
       }
-      return applyRoundEnd(log(state, `第 ${state.round} 轮进入回合结尾挥发。`));
-
-    case "finishGame": {
-      if (state.phase !== "finalAutoSeal") {
-        return state;
-      }
-
-      let current = state;
-      for (const index of [0, 1] as const) {
-        if (current.bottles[index]) {
-          current = sealBottleInternal(current, index, false);
-        }
-      }
-
-      return {
-        ...log(current, `第 ${state.maxRounds} 轮结束后自动封瓶完成。最终总分 ${current.score}。`),
-        phase: "finished",
-      };
-    }
+      return applyRoundEnd(log(state, `第 ${state.round} 回合进入回合结尾挥发。`));
 
     default:
       return state;

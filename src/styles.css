@@ -90,6 +90,70 @@ input {
   padding: 18px;
 }
 
+.top-action-bar {
+  position: sticky;
+  top: 0;
+  z-index: 12;
+  margin: -34px -38px 1.2rem;
+}
+
+.top-action-bar__inner {
+  width: min(100%, 1240px);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 60px;
+  padding: 0.65rem 1.75rem;
+  border-bottom: 1px solid rgba(211, 189, 150, 0.78);
+  background: rgba(248, 243, 234, 0.94);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 10px 24px rgba(60, 44, 24, 0.06);
+}
+
+.top-action-bar__meta {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 180px;
+}
+
+.top-action-bar__meta strong {
+  font-size: 0.95rem;
+  font-weight: 400;
+  color: #4f473d;
+}
+
+.top-action-bar__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+
+.top-action-btn {
+  min-width: 108px;
+  padding: 0.68rem 0.95rem;
+  border-radius: 0;
+  border-color: rgba(209, 190, 158, 0.8);
+  background: rgba(239, 228, 208, 0.56);
+  color: rgba(72, 63, 54, 0.76);
+  box-shadow: none;
+}
+
+.top-action-btn.is-live {
+  border-color: rgba(190, 144, 74, 0.72);
+  background: linear-gradient(180deg, rgba(231, 214, 183, 0.98), rgba(216, 191, 145, 0.94));
+  color: #4a3723;
+  box-shadow: 0 10px 24px rgba(151, 113, 55, 0.12);
+}
+
+.top-action-btn.is-live:hover:not(:disabled) {
+  box-shadow: 0 14px 30px rgba(151, 113, 55, 0.16);
+}
+
 .frame {
   position: relative;
   min-height: calc(100vh - 36px);
@@ -285,6 +349,12 @@ input {
   width: 100%;
   max-width: 260px;
   text-align: center;
+  transition: transform 220ms ease, filter 220ms ease;
+}
+
+.vessel-wrap.is-targeted {
+  transform: translateY(-4px);
+  filter: drop-shadow(0 16px 28px rgba(161, 121, 57, 0.14));
 }
 
 .vessel-neck {
@@ -305,6 +375,16 @@ input {
 
 .vessel.is-empty {
   opacity: 0.68;
+}
+
+.vessel.is-receiving::before {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  border-radius: 84px 84px 18px 18px;
+  background: radial-gradient(circle at 50% 26%, rgba(255, 245, 220, 0.65), rgba(255, 245, 220, 0.08) 42%, transparent 62%);
+  animation: vesselReceiveGlow 360ms ease-out forwards;
+  pointer-events: none;
 }
 
 .vessel::after {
@@ -424,10 +504,24 @@ input {
   color: #6f685e;
 }
 
+.vessel-action {
+  width: 100%;
+  margin-top: 0.9rem;
+}
+
+.vessel-action.is-active {
+  border-color: rgba(190, 144, 74, 0.65);
+  background: linear-gradient(180deg, rgba(236, 221, 191, 0.98), rgba(222, 203, 167, 0.96));
+}
+
 .draft-panel {
   width: min(920px, 100%);
   border-radius: 30px;
   padding: 1.15rem 1.2rem 1.3rem;
+}
+
+.draft-panel.is-place-mode {
+  border-color: rgba(190, 144, 74, 0.42);
 }
 
 .draft-panel__header {
@@ -451,6 +545,10 @@ input {
   gap: 1rem;
 }
 
+.cards--placement {
+  gap: 1.2rem;
+}
+
 .essence-card {
   width: 132px;
   min-height: 176px;
@@ -471,6 +569,18 @@ input {
   box-shadow: 0 18px 34px rgba(86, 58, 26, 0.11);
 }
 
+.essence-card:hover:not(:disabled) {
+  transform: translateY(-4px);
+}
+
+.essence-card.is-selected:hover:not(:disabled) {
+  transform: translateY(-8px);
+}
+
+.essence-card.is-pending {
+  border-color: rgba(200, 165, 106, 0.58);
+}
+
 .essence-card__type {
   font-size: 0.62rem;
   letter-spacing: 0.26em;
@@ -486,6 +596,10 @@ input {
   border: 1px solid var(--line-soft);
   background: var(--swatch);
   box-shadow: inset 0 0 0 8px rgba(255, 255, 255, 0.55);
+}
+
+.essence-card.is-draining .essence-card__swatch {
+  animation: swatchDrain 360ms ease forwards;
 }
 
 .essence-card__name {
@@ -535,6 +649,199 @@ input {
   color: var(--muted);
   font-size: 0.92rem;
   line-height: 1.75;
+}
+
+.card-flight-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+}
+
+.card-flight {
+  position: fixed;
+  left: var(--flight-left);
+  top: var(--flight-top);
+  width: var(--flight-width);
+  height: var(--flight-height);
+}
+
+.card-flight__burst {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  opacity: 1;
+}
+
+.card-flight.is-launched .card-flight__burst {
+  opacity: 0;
+}
+
+.card-flight__fragment,
+.card-flight__mote {
+  position: absolute;
+  display: block;
+}
+
+.card-flight__fragment {
+  left: 50%;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  margin-left: -7px;
+  margin-top: -7px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.95), var(--flight-color) 65%, rgba(255, 255, 255, 0.18) 100%);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--flight-color) 55%, white 45%);
+  opacity: 0;
+  transform: translate3d(0, 0, 0) scale(0.55);
+}
+
+.card-flight.is-launched .card-flight__fragment {
+  opacity: 0.95;
+  transition:
+    transform 360ms cubic-bezier(0.16, 0.84, 0.22, 1),
+    opacity 360ms ease;
+}
+
+.card-flight__fragment--1 {
+  transition-delay: 0ms;
+}
+
+.card-flight__fragment--2 {
+  transition-delay: 20ms;
+}
+
+.card-flight__fragment--3 {
+  transition-delay: 10ms;
+}
+
+.card-flight__fragment--4 {
+  transition-delay: 30ms;
+}
+
+.card-flight__fragment--5 {
+  transition-delay: 40ms;
+}
+
+.card-flight.is-launched .card-flight__fragment--1 {
+  transform: translate3d(-18px, -14px, 0) scale(0.3);
+  opacity: 0;
+}
+
+.card-flight.is-launched .card-flight__fragment--2 {
+  transform: translate3d(20px, -16px, 0) scale(0.28);
+  opacity: 0;
+}
+
+.card-flight.is-launched .card-flight__fragment--3 {
+  transform: translate3d(-16px, 18px, 0) scale(0.25);
+  opacity: 0;
+}
+
+.card-flight.is-launched .card-flight__fragment--4 {
+  transform: translate3d(18px, 14px, 0) scale(0.26);
+  opacity: 0;
+}
+
+.card-flight.is-launched .card-flight__fragment--5 {
+  transform: translate3d(0, -20px, 0) scale(0.22);
+  opacity: 0;
+}
+
+.card-flight__mote {
+  left: calc(var(--flight-width) / 2 - 4px);
+  top: calc(var(--flight-height) / 2 - 4px);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.96), var(--flight-color) 60%, rgba(0, 0, 0, 0) 72%);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--flight-color) 72%, white 28%);
+  opacity: 0;
+  transform: translate3d(0, 0, 0) scale(0.36);
+}
+
+.card-flight.is-launched .card-flight__mote {
+  opacity: 0.95;
+  transition:
+    transform 360ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 360ms ease;
+}
+
+.card-flight__mote--1 {
+  transition-delay: 0ms;
+}
+
+.card-flight__mote--2 {
+  transition-delay: 16ms;
+}
+
+.card-flight__mote--3 {
+  transition-delay: 34ms;
+}
+
+.card-flight__mote--4 {
+  transition-delay: 52ms;
+}
+
+.card-flight__mote--5 {
+  transition-delay: 70ms;
+}
+
+.card-flight.is-launched .card-flight__mote--1 {
+  transform: translate3d(calc(var(--flight-x) * 0.96), calc(var(--flight-y) * 0.96), 0) scale(1);
+  opacity: 0;
+}
+
+.card-flight.is-launched .card-flight__mote--2 {
+  transform: translate3d(calc(var(--flight-x) * 0.93 + 8px), calc(var(--flight-y) * 0.94 - 12px), 0) scale(0.8);
+  opacity: 0;
+}
+
+.card-flight.is-launched .card-flight__mote--3 {
+  transform: translate3d(calc(var(--flight-x) * 0.98 - 10px), calc(var(--flight-y) * 0.98 + 8px), 0) scale(0.68);
+  opacity: 0;
+}
+
+.card-flight.is-launched .card-flight__mote--4 {
+  transform: translate3d(calc(var(--flight-x) * 0.9 + 14px), calc(var(--flight-y) * 0.9 + 14px), 0) scale(0.74);
+  opacity: 0;
+}
+
+.card-flight.is-launched .card-flight__mote--5 {
+  transform: translate3d(calc(var(--flight-x) * 0.95 - 6px), calc(var(--flight-y) * 0.92 - 16px), 0) scale(0.58);
+  opacity: 0;
+}
+
+@keyframes swatchDrain {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+    filter: saturate(1);
+  }
+
+  100% {
+    transform: scale(0.84);
+    opacity: 0.16;
+    filter: saturate(0.55) blur(0.6px);
+  }
+}
+
+@keyframes vesselReceiveGlow {
+  0% {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+
+  30% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.04);
+  }
 }
 
 .rulebook-backdrop {
@@ -730,6 +1037,24 @@ input {
 }
 
 @media (max-width: 920px) {
+  .top-action-bar {
+    margin: -22px -18px 1rem;
+  }
+
+  .top-action-bar__inner {
+    align-items: flex-start;
+    padding: 0.8rem 1rem;
+  }
+
+  .top-action-bar__meta,
+  .top-action-bar__actions {
+    width: 100%;
+  }
+
+  .top-action-bar__actions {
+    justify-content: flex-start;
+  }
+
   .frame {
     padding: 22px 18px 24px;
   }
@@ -761,6 +1086,19 @@ input {
 @media (max-width: 640px) {
   .app {
     padding: 10px;
+  }
+
+  .top-action-bar {
+    margin: -22px -18px 0.9rem;
+  }
+
+  .top-action-bar__inner {
+    padding: 0.75rem 0.85rem;
+  }
+
+  .top-action-btn {
+    min-width: 0;
+    flex: 1 1 calc(50% - 0.4rem);
   }
 
   .frame {

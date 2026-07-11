@@ -16,7 +16,9 @@ export function Scoreboard({ state }: ScoreboardProps) {
       <div className="score-list">
         <div className="score-item">
           <span className="eyebrow">Round</span>
-          <strong>{Math.min(state.round, state.maxRounds)} / {state.maxRounds}</strong>
+          <strong>
+            {Math.min(state.round, state.maxRounds)} / {state.maxRounds}
+          </strong>
         </div>
         <div className="score-item">
           <span className="eyebrow">Score</span>
@@ -51,8 +53,6 @@ function phaseLabel(phase: GameState["phase"]): string {
       return "放置";
     case "seal":
       return "封瓶";
-    case "finalAutoSeal":
-      return "自动封瓶";
     case "finished":
       return "结算";
   }
