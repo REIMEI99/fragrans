@@ -866,6 +866,106 @@ input {
   box-shadow: 0 28px 80px rgba(38, 30, 19, 0.18);
 }
 
+.tutorial-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 18;
+  pointer-events: none;
+}
+
+.tutorial-overlay__mask {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.tutorial-overlay__highlight {
+  position: fixed;
+  z-index: 19;
+  border: 1px solid rgba(234, 209, 154, 0.96);
+  box-shadow:
+    0 0 0 2px rgba(255, 246, 224, 0.35),
+    0 0 28px rgba(255, 228, 176, 0.22),
+    0 18px 38px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 251, 241, 0.02);
+  pointer-events: none;
+}
+
+.tutorial-focus-target {
+  isolation: isolate;
+}
+
+.tutorial-card {
+  position: absolute;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  width: min(720px, calc(100vw - 32px));
+  border: 1px solid rgba(218, 197, 162, 0.9);
+  background: rgba(251, 247, 240, 0.96);
+  box-shadow: 0 24px 60px rgba(27, 20, 12, 0.18);
+  padding: 1rem 1.05rem;
+  pointer-events: auto;
+}
+
+.tutorial-card h2 {
+  margin: 0.45rem 0 0.7rem;
+  font-size: 1.2rem;
+  font-weight: 400;
+}
+
+.tutorial-card__body {
+  display: grid;
+  gap: 0.32rem;
+  margin: 0;
+  color: #5d554c;
+  line-height: 1.8;
+}
+
+.tutorial-card__line {
+  display: block;
+}
+
+.tutorial-card__line strong {
+  font-weight: 700;
+  color: #433629;
+}
+
+.tutorial-card__progress {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.tutorial-card__progress strong {
+  font-size: 0.92rem;
+  font-weight: 400;
+  color: #574f45;
+}
+
+.tutorial-card__footer {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.tutorial-card__hint {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.tutorial-card__actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
 .rulebook__body {
   display: grid;
   gap: 0.95rem;
@@ -1099,6 +1199,11 @@ input {
   .top-action-btn {
     min-width: 0;
     flex: 1 1 calc(50% - 0.4rem);
+  }
+
+  .tutorial-card {
+    bottom: 12px;
+    width: calc(100vw - 20px);
   }
 
   .frame {

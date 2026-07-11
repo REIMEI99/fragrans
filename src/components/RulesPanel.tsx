@@ -1,40 +1,32 @@
 interface RulesPanelProps {
   onOpenRulebook: () => void;
+  onStartTutorial: () => void;
 }
 
-export function RulesPanel({ onOpenRulebook }: RulesPanelProps) {
+export function RulesPanel({ onOpenRulebook, onStartTutorial }: RulesPanelProps) {
   return (
     <section className="panel panel-compact">
       <div className="panel-header">
-        <h2>完整规则</h2>
-        <button type="button" onClick={onOpenRulebook}>
-          打开说明
-        </button>
+        <h2>说明入口</h2>
       </div>
 
       <div className="brief-list">
         <article className="brief">
-          <div className="eyebrow">01. 回合流程</div>
-          <h3>每回合从 4 个香材中选 2 个，而且必须全部使用</h3>
-          <p>你可以把两枚香材放进同一瓶或分到两瓶，但每瓶都必须按 1 到 6 格从上到下依次填入，不能跳格。</p>
+          <div className="eyebrow">01. 新手教程</div>
+          <h3>用固定脚本带你走完一遍关键机制</h3>
+          <p>教程模式会用预设回合与预设香料，逐步演示选牌、放置、挥发、腐朽、顾客与封瓶的节奏。</p>
+          <button type="button" onClick={onStartTutorial}>
+            开始新手教程
+          </button>
         </article>
 
         <article className="brief">
-          <div className="eyebrow">02. 封瓶与挥发</div>
-          <h3>3 格起可以手动封瓶，不封就继续暴露在挥发风险里</h3>
-          <p>一瓶香水成分到达 3 格后会暴露在挥发风险中，若不封瓶会逐渐变淡和腐朽。腐朽会移除成分第 1 格，把所有成分上移1格，并加入 1 个腐朽标记。</p>
-        </article>
-
-        <article className="brief">
-          <div className="eyebrow">03. 计分结构</div>
-          <h3>基础分 + 排列分 + 浓度分 + 顾客分 - 腐朽扣分</h3>
-          <p>基础分看格数，排列分看顺序链，浓度分看同种香材重复数，顾客分只在当回合手动封瓶时结算。每个腐朽标记最终 -2 分。</p>
-        </article>
-
-        <article className="brief">
-          <div className="eyebrow">04. 完整说明</div>
-          <h3>查看完整规则</h3>
-          <p>上方按钮会打开完整说明，里面会把更详细的计分表写清楚。</p>
+          <div className="eyebrow">02. 完整规则</div>
+          <h3>随时查看完整计分与回合说明</h3>
+          <p>如果你想直接查表，或者回顾基础分、排列分、浓度分与顾客分的构成，可以打开完整规则。</p>
+          <button type="button" onClick={onOpenRulebook}>
+            打开完整规则
+          </button>
         </article>
       </div>
     </section>
@@ -58,7 +50,7 @@ export function RulebookModal({
         <div className="panel-header">
           <h2 id="rulebook-title">余香完整规则</h2>
           <button type="button" onClick={onClose}>
-            开始试玩
+            关闭
           </button>
         </div>
 
@@ -71,45 +63,32 @@ export function RulebookModal({
 
           <article className="brief">
             <div className="eyebrow">B. 每回合做什么</div>
-            <h3>抽 4 选 2，然后把这 2 个都放进瓶子</h3>
-            <p>每回合会出现 4 个香材。你必须选其中 2 个，并且这 2 个都要在本回合放进香水瓶里，不能弃掉。</p>
-            <p>你可以两枚都放同一瓶，也可以一枚一瓶；但同一瓶永远只能从上往下填，先填 1 格，再填 2 格，直到 6 格。</p>
+            <h3>从 4 张香料中选 2 张，而且必须全部使用</h3>
+            <p>你可以把两张香料放进同一瓶，也可以拆到两瓶；但每一瓶都只能从上到下依次填入，不能跳格。</p>
           </article>
 
           <article className="brief">
             <div className="eyebrow">C. 封瓶</div>
-            <h3>香水达到 3 格后，可以在回合末手动封瓶</h3>
-            <p>手动封瓶会立刻结算这瓶的分数，腾出瓶子以供调制新香水，并且如果满足当前两张顾客卡的条件，还会拿到对应顾客奖励。</p>
-            <p>第 10 回合结束后，所有未封瓶香水会自动封瓶，但自动封瓶不享受顾客加分。</p>
+            <h3>达到 3 格后可以在回合末手动封瓶</h3>
+            <p>手动封瓶会立刻结算这瓶的分数，并在满足条件时获得当前公共顾客池的奖励。</p>
           </article>
 
           <article className="brief">
             <div className="eyebrow">D. 挥发与腐朽</div>
-            <h3>未封瓶且达到 3 格的香水，会在每回合结尾继续老化</h3>
-            <p>只要香水达到3格以上且未封瓶，回合结束时就会“变淡”；变淡的香水第二回合结束时仍未封瓶则会“腐朽”。腐朽时，这瓶香水会移除上方第 1 格的香材，其余香材整体上移一格，状态回到新鲜（下回合仍不封瓶则会再次变淡），并加入 1 个腐朽标记。</p>
-            <p>每个腐朽标记在最终结算时都会 -2 分。</p>
+            <h3>达到 3 格后，未封瓶香水会开始老化</h3>
+            <p>新鲜会在回合结束时变淡，变淡再拖一回合就会腐朽。腐朽时最上方一格消失，其余成分上移，并获得 1 个腐朽标记。</p>
           </article>
 
           <article className="brief">
-            <div className="eyebrow">E. 香材与顺序链</div>
-            <h3>六种香材的顺序链为：柑橘 → 绿叶 → 花香 → 果香 → 木质 → 辛香</h3>
-            <p>结算时选择这瓶香水里最长的一段连续顺序链，长度 2 / 3 / 4 / 5 / 6，分别得到 1 / 2 / 3 / 5 / 7 分。</p>
+            <div className="eyebrow">E. 排列链</div>
+            <h3>顺序链为：柑橘 → 绿叶 → 花香 → 果香 → 木质 → 沉香</h3>
+            <p>结算时看这瓶里最长的一段连续顺序链，长度 2 / 3 / 4 / 5 / 6 分别记 1 / 2 / 3 / 5 / 7 分。</p>
           </article>
 
           <article className="brief">
-            <div className="eyebrow">F. 全部计分</div>
+            <div className="eyebrow">F. 总分结构</div>
             <h3>封瓶总分 = 基础分 + 排列分 + 浓度分 + 顾客分 - 腐朽扣分</h3>
-            <p>基础分：3 / 4 / 5 / 6 格，分别得 1 / 2 / 4 / 6 分。</p>
-            <p>排列分：顺序链长度 2 / 3 / 4 / 5 / 6，分别得 1 / 2 / 3 / 5 / 7 分。</p>
-            <p>浓度分：同一种香材最多重复 2 / 3 / 4 / 5 / 6 次，分别得 1 / 3 / 5 / 7 / 10 分。</p>
-            <p>顾客分：只在当回合手动封瓶时结算，满足哪张顾客卡就拿那张卡写明的分数。</p>
-            <p>腐朽扣分：每个腐朽标记 -2 分。</p>
-          </article>
-
-          <article className="brief">
-            <div className="eyebrow">G. 顾客机制</div>
-            <h3>场上永远展示 2 张顾客卡</h3>
-            <p>当你手动封瓶时，如果这瓶满足其中一张或两张顾客卡，就拿到对应奖励，并将完成的卡从公共牌池中补新。</p>
+            <p>基础分看格数，排列分看顺序链，浓度分看同种香料重复次数，顾客分只在手动封瓶时结算。每个腐朽标记最终 -2 分。</p>
           </article>
         </div>
       </section>

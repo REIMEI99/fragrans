@@ -12,6 +12,7 @@ import type { Bottle } from "../game/types";
 interface BottleViewProps {
   bottle: Bottle | null;
   slotIndex: 0 | 1;
+  registerRootRef?: (node: HTMLElement | null) => void;
   placeMode?: boolean;
   placeLabel?: string;
   placeDisabled?: boolean;
@@ -25,6 +26,7 @@ interface BottleViewProps {
 export function BottleView({
   bottle,
   slotIndex,
+  registerRootRef,
   placeMode = false,
   placeLabel = "放入此瓶",
   placeDisabled = true,
@@ -46,7 +48,7 @@ export function BottleView({
 
   if (!bottle) {
     return (
-      <section className={`vessel-wrap ${placeActive ? "is-targeted" : ""}`}>
+      <section ref={registerRootRef} className={`vessel-wrap ${placeActive ? "is-targeted" : ""}`}>
         <div className="vessel-neck" />
         <div className={`vessel is-empty ${receiveActive ? "is-receiving" : ""}`}>
           {POSITION_INFO.map((slot) => (
@@ -73,7 +75,7 @@ export function BottleView({
   }
 
   return (
-    <section className={`vessel-wrap ${placeActive ? "is-targeted" : ""}`}>
+    <section ref={registerRootRef} className={`vessel-wrap ${placeActive ? "is-targeted" : ""}`}>
       <div className="vessel-neck" />
       <div className={`vessel ${receiveActive ? "is-receiving" : ""}`}>
         {bottle.slots.map((slot, index) => (

@@ -9,6 +9,7 @@ interface DiceDraftProps {
   onSelectPlacementDie: (index: number) => void;
   registerCardRef: (index: number, node: HTMLButtonElement | null) => void;
   registerSwatchRef: (index: number, node: HTMLSpanElement | null) => void;
+  registerRootRef?: (node: HTMLElement | null) => void;
   animationLocked: boolean;
   animatingDraftIndex: number | null;
 }
@@ -21,13 +22,14 @@ export function DiceDraft({
   onSelectPlacementDie,
   registerCardRef,
   registerSwatchRef,
+  registerRootRef,
   animationLocked,
   animatingDraftIndex,
 }: DiceDraftProps) {
   const visibleIndexes = state.phase === "place" ? state.pendingDice : state.rolledDice.map((_, index) => index);
 
   return (
-    <section className={`draft-panel ${state.phase === "place" ? "is-place-mode" : ""}`}>
+    <section ref={registerRootRef} className={`draft-panel ${state.phase === "place" ? "is-place-mode" : ""}`}>
       <div className="draft-panel__header">
         <div>
           <div className="eyebrow">Action</div>

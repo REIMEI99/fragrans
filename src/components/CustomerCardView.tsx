@@ -2,11 +2,12 @@ import type { CustomerCard } from "../game/types";
 
 interface CustomerCardViewProps {
   customers: CustomerCard[];
+  registerRootRef?: (node: HTMLElement | null) => void;
 }
 
-export function CustomerCardView({ customers }: CustomerCardViewProps) {
+export function CustomerCardView({ customers, registerRootRef }: CustomerCardViewProps) {
   return (
-    <section className="panel panel-compact">
+    <section ref={registerRootRef} className="panel panel-compact">
       <div className="panel-header">
         <h2>公共顾客池</h2>
         <span className="eyebrow">封瓶时结算</span>

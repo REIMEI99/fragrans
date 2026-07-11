@@ -5,15 +5,16 @@ interface ActionPanelProps {
   state: GameState;
   onSealBottle: (bottleIndex: 0 | 1) => void;
   onFinishSealPhase: () => void;
+  registerRootRef?: (node: HTMLElement | null) => void;
 }
 
-export function ActionPanel({ state, onSealBottle, onFinishSealPhase }: ActionPanelProps) {
+export function ActionPanel({ state, onSealBottle, onFinishSealPhase, registerRootRef }: ActionPanelProps) {
   const canSealLeft = state.phase === "seal" && Boolean(state.bottles[0]) && canStartSeal(state.bottles[0]!);
   const canSealRight = state.phase === "seal" && Boolean(state.bottles[1]) && canStartSeal(state.bottles[1]!);
   const canFinishSeal = state.phase === "seal";
 
   return (
-    <section className="top-action-bar" aria-label="操作栏">
+    <section ref={registerRootRef} className="top-action-bar" aria-label="操作栏">
       <div className="top-action-bar__inner">
         <div className="top-action-bar__meta">
           <span className="eyebrow">Action Bar</span>

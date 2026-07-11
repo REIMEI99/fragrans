@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useRef, useState } from "react";
+import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { ActionPanel } from "./components/ActionPanel";
 import { BottleView } from "./components/BottleView";
@@ -9,10 +9,13 @@ import { NoteGuide } from "./components/NoteGuide";
 import { RulebookModal, RulesPanel } from "./components/RulesPanel";
 import { Scoreboard } from "./components/Scoreboard";
 import { SettlementModal } from "./components/SettlementModal";
+import { TutorialOverlay } from "./components/TutorialOverlay";
 import { INGREDIENT_INFO } from "./game/data";
 import { canPlaceIngredient, createBottle, createInitialState } from "./game/rules";
 import { gameReducer } from "./game/reducer";
-import type { GameAction } from "./game/types";
+import type { GameAction, GameState } from "./game/types";
+import { TUTORIAL_STEPS } from "./tutorial/script";
+import type { TutorialHighlightTarget, TutorialSession } from "./tutorial/types";
 
 function generateRandomSeed(): number {
   const array = new Uint32Array(1);
@@ -32,11 +35,41 @@ interface FlightState {
   launched: boolean;
 }
 
+function sortIndexes(indexes: number[]): number[] {
+  return [...indexes].sort((left, right) => left - right);
+}
+
+const TUTORIAL_COOKIE = "fragrans_tutorial_seen";
+
+function hasSeenTutorialCookie(): boolean {
+  if (typeof document === "undefined") {
+    return false;
+  }
+  return document.cookie.split("; ").some((entry) => entry === `${TUTORIAL_COOKIE}=1`);
+}
+
+function markTutorialCookie(): void {
+  if (typeof document === "undefined") {
+    return;
+  }
+  document.cookie = `${TUTORIAL_COOKIE}=1; max-age=31536000; path=/; samesite=lax`;
+}
+
+function createInitialTutorialSession(): TutorialSession {
+  if (!hasSeenTutorialCookie()) {
+    markTutorialCookie();
+    return { mode: "active", stepIndex: 0 };
+  }
+  return { mode: "inactive", stepIndex: 0 };
+}
+
 export default function App() {
   const [state, dispatch] = useReducer(gameReducer, undefined, () => createInitialState(generateRandomSeed()));
   const [seedInput, setSeedInput] = useState(String(state.seed));
-  const [showRulebook, setShowRulebook] = useState(true);
+  const [showRulebook, setShowRulebook] = useState(false);
   const [showSettlement, setShowSettlement] = useState(false);
+  const [tutorialSession, setTutorialSession] = useState<TutorialSession>(() => createInitialTutorialSession());
+  const [tutorialChosenDice, setTutorialChosenDice] = useState<number[]>([]);
   const [activePlacementDie, setActivePlacementDie] = useState<number | null>(null);
   const [flight, setFlight] = useState<FlightState | null>(null);
   const [receivingBottle, setReceivingBottle] = useState<0 | 1 | null>(null);
@@ -46,6 +79,21 @@ export default function App() {
   const swatchRefs = useRef<Record<number, HTMLSpanElement | null>>({});
   const bottleButtonRefs = useRef<Record<0 | 1, HTMLButtonElement | null>>({ 0: null, 1: null });
   const bottleTargetRefs = useRef<Record<0 | 1, HTMLDivElement | null>>({ 0: null, 1: null });
+  const tutorialTargetRefs = useRef<Record<string, HTMLElement | null>>({});
+  const [highlightRects, setHighlightRects] = useState<Array<{ left: number; top: number; width: number; height: number }>>([]);
+
+  const tutorialActive = tutorialSession.mode === "active";
+  const tutorialStep = tutorialActive ? TUTORIAL_STEPS[tutorialSession.stepIndex] : null;
+
+  const displayState: GameState = useMemo(() => {
+    if (!tutorialStep) {
+      return state;
+    }
+    if (tutorialStep.completion.type === "confirm_choice") {
+      return { ...tutorialStep.board, chosenDice: tutorialChosenDice };
+    }
+    return tutorialStep.board;
+  }, [state, tutorialStep, tutorialChosenDice]);
 
   function applyPlayerAction(action: GameAction) {
     dispatch(action);
@@ -59,34 +107,68 @@ export default function App() {
     setFlight(null);
     setReceivingBottle(null);
     setActivePlacementDie(null);
+    setTutorialChosenDice([]);
   }
 
   function restartWithSeed(seed: number) {
     setShowSettlement(false);
     clearPendingUiState();
+    setTutorialSession({ mode: "inactive", stepIndex: 0 });
     applyPlayerAction({ type: "start", seed });
   }
 
+  function startTutorial() {
+    clearPendingUiState();
+    setShowRulebook(false);
+    setShowSettlement(false);
+    setTutorialSession({ mode: "active", stepIndex: 0 });
+  }
+
+  function exitTutorial() {
+    clearPendingUiState();
+    setTutorialSession({ mode: "inactive", stepIndex: 0 });
+  }
+
+  function goToTutorialStep(index: number) {
+    clearPendingUiState();
+    if (index >= TUTORIAL_STEPS.length) {
+      setTutorialSession({ mode: "completed", stepIndex: TUTORIAL_STEPS.length - 1 });
+      exitTutorial();
+      return;
+    }
+    setTutorialSession({ mode: "active", stepIndex: index });
+  }
+
+  function nextTutorialStep() {
+    goToTutorialStep(tutorialSession.stepIndex + 1);
+  }
+
+  function prevTutorialStep() {
+    if (tutorialSession.stepIndex > 0) {
+      goToTutorialStep(tutorialSession.stepIndex - 1);
+    }
+  }
+
   useEffect(() => {
-    if (previousPhase.current !== "finished" && state.phase === "finished") {
+    if (previousPhase.current !== "finished" && state.phase === "finished" && !tutorialActive) {
       setShowSettlement(true);
     }
     previousPhase.current = state.phase;
-  }, [state.phase]);
+  }, [state.phase, tutorialActive]);
 
   useEffect(() => {
-    if (state.phase !== "place") {
+    if (displayState.phase !== "place") {
       setActivePlacementDie(null);
       return;
     }
 
     setActivePlacementDie((current) => {
-      if (current !== null && state.pendingDice.includes(current)) {
+      if (current !== null && displayState.pendingDice.includes(current)) {
         return current;
       }
-      return state.pendingDice[0] ?? null;
+      return displayState.pendingDice[0] ?? null;
     });
-  }, [state.phase, state.pendingDice]);
+  }, [displayState.phase, displayState.pendingDice]);
 
   useEffect(() => {
     if (!flight || flight.launched) {
@@ -107,6 +189,71 @@ export default function App() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!tutorialActive || !tutorialStep) {
+      Object.values(tutorialTargetRefs.current).forEach((node) => {
+        node?.classList.remove("tutorial-focus-target");
+      });
+      Object.values(cardRefs.current).forEach((node) => {
+        node?.classList.remove("tutorial-focus-target");
+      });
+      setHighlightRects([]);
+      return;
+    }
+
+    const updateRects = () => {
+      const targetNodes = tutorialStep.highlightTargets
+        .map((target) => resolveTutorialTarget(target))
+        .filter((node): node is HTMLElement => Boolean(node));
+
+      Object.values(tutorialTargetRefs.current).forEach((node) => {
+        node?.classList.remove("tutorial-focus-target");
+      });
+      Object.values(cardRefs.current).forEach((node) => {
+        node?.classList.remove("tutorial-focus-target");
+      });
+      targetNodes.forEach((node) => {
+        node.classList.add("tutorial-focus-target");
+      });
+
+      const rects = targetNodes
+        .filter((node): node is HTMLElement => Boolean(node))
+        .map((node) => {
+          const rect = node.getBoundingClientRect();
+          return {
+            left: rect.left - 8,
+            top: rect.top - 8,
+            width: rect.width + 16,
+            height: rect.height + 16,
+          };
+        });
+      setHighlightRects(rects);
+    };
+
+    const firstTarget = tutorialStep.highlightTargets
+      .map((target) => resolveTutorialTarget(target))
+      .find((node): node is HTMLElement => Boolean(node));
+
+    if (firstTarget) {
+      firstTarget.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" });
+    }
+
+    updateRects();
+    window.addEventListener("resize", updateRects);
+    window.addEventListener("scroll", updateRects, { passive: true });
+
+    return () => {
+      Object.values(tutorialTargetRefs.current).forEach((node) => {
+        node?.classList.remove("tutorial-focus-target");
+      });
+      Object.values(cardRefs.current).forEach((node) => {
+        node?.classList.remove("tutorial-focus-target");
+      });
+      window.removeEventListener("resize", updateRects);
+      window.removeEventListener("scroll", updateRects);
+    };
+  }, [tutorialActive, tutorialStep, displayState]);
+
   function registerCardRef(index: number, node: HTMLButtonElement | null) {
     cardRefs.current[index] = node;
   }
@@ -123,19 +270,110 @@ export default function App() {
     bottleTargetRefs.current[index] = node;
   }
 
-  function handlePlaceIntoBottle(bottleIndex: 0 | 1) {
-    if (state.phase !== "place" || activePlacementDie === null || flight) {
+  function registerTutorialTarget(target: string, node: HTMLElement | null) {
+    tutorialTargetRefs.current[target] = node;
+  }
+
+  function resolveTutorialTarget(target: TutorialHighlightTarget): HTMLElement | null {
+    if (target === "draft-card-0") {
+      return cardRefs.current[0] ?? null;
+    }
+    if (target === "draft-card-1") {
+      return cardRefs.current[1] ?? null;
+    }
+    return tutorialTargetRefs.current[target] ?? null;
+  }
+
+  function handleToggleDie(index: number) {
+    if (!tutorialStep) {
+      applyPlayerAction({ type: "toggleDie", index });
       return;
     }
 
-    const ingredient = state.rolledDice[activePlacementDie];
+    if (tutorialStep.completion.type !== "confirm_choice") {
+      return;
+    }
+
+    const expectedIndexes = tutorialStep.completion.draftIndexes;
+
+    if (!expectedIndexes.includes(index)) {
+      return;
+    }
+
+    setTutorialChosenDice((current) => {
+      if (current.includes(index)) {
+        return current.filter((item) => item !== index);
+      }
+      if (current.length >= expectedIndexes.length) {
+        return current;
+      }
+      return [...current, index];
+    });
+  }
+
+  function handleConfirmChoice() {
+    if (!tutorialStep) {
+      applyPlayerAction({ type: "confirmChoice" });
+      return;
+    }
+
+    if (tutorialStep.completion.type !== "confirm_choice") {
+      return;
+    }
+
+    const expected = sortIndexes(tutorialStep.completion.draftIndexes);
+    const chosen = sortIndexes(tutorialChosenDice);
+    if (JSON.stringify(expected) !== JSON.stringify(chosen)) {
+      return;
+    }
+
+    nextTutorialStep();
+  }
+
+  function handleSelectPlacementDie(index: number) {
+    if (!tutorialStep) {
+      setActivePlacementDie(index);
+      return;
+    }
+
+    if (tutorialStep.completion.type !== "place_die") {
+      return;
+    }
+
+    if (index !== tutorialStep.completion.draftIndex) {
+      return;
+    }
+
+    setActivePlacementDie(index);
+  }
+
+  function handlePlaceIntoBottle(bottleIndex: 0 | 1) {
+    if (displayState.phase !== "place" || activePlacementDie === null || flight) {
+      return;
+    }
+
+    if (tutorialStep) {
+      if (tutorialStep.completion.type !== "place_die") {
+        return;
+      }
+      if (tutorialStep.completion.draftIndex !== activePlacementDie || tutorialStep.completion.bottleIndex !== bottleIndex) {
+        return;
+      }
+    }
+
+    const ingredient = displayState.rolledDice[activePlacementDie];
     const source = swatchRefs.current[activePlacementDie] ?? cardRefs.current[activePlacementDie];
     const target = bottleTargetRefs.current[bottleIndex] ?? bottleButtonRefs.current[bottleIndex];
 
     const commitPlacement = () => {
-      applyPlayerAction({ type: "placeDie", draftIndex: activePlacementDie, bottleIndex });
+      if (tutorialStep) {
+        nextTutorialStep();
+      } else {
+        applyPlayerAction({ type: "placeDie", draftIndex: activePlacementDie, bottleIndex });
+      }
       setActivePlacementDie(null);
       setFlight(null);
+      setReceivingBottle(null);
       flightTimerRef.current = null;
     };
 
@@ -163,12 +401,33 @@ export default function App() {
     flightTimerRef.current = window.setTimeout(commitPlacement, 360);
   }
 
+  function handleSealBottle(bottleIndex: 0 | 1) {
+    if (tutorialStep) {
+      if (tutorialStep.completion.type === "seal_bottle" && tutorialStep.completion.bottleIndex === bottleIndex) {
+        nextTutorialStep();
+      }
+      return;
+    }
+    applyPlayerAction({ type: "sealBottle", bottleIndex });
+  }
+
+  function handleFinishSealPhase() {
+    if (tutorialStep) {
+      if (tutorialStep.completion.type === "finish_round") {
+        nextTutorialStep();
+      }
+      return;
+    }
+    applyPlayerAction({ type: "finishSealPhase" });
+  }
+
   return (
-    <main className="app">
+    <main className={`app ${tutorialActive ? "is-tutorial-mode" : ""}`}>
       <ActionPanel
-        state={state}
-        onSealBottle={(bottleIndex) => applyPlayerAction({ type: "sealBottle", bottleIndex })}
-        onFinishSealPhase={() => applyPlayerAction({ type: "finishSealPhase" })}
+        state={displayState}
+        onSealBottle={handleSealBottle}
+        onFinishSealPhase={handleFinishSealPhase}
+        registerRootRef={(node) => registerTutorialTarget("top-action-bar", node)}
       />
 
       <RulebookModal open={showRulebook} onClose={() => setShowRulebook(false)} />
@@ -182,6 +441,17 @@ export default function App() {
           setSeedInput(String(nextSeed));
           restartWithSeed(nextSeed);
         }}
+      />
+      <TutorialOverlay
+        open={tutorialActive}
+        step={tutorialStep}
+        highlightRects={highlightRects}
+        stepIndex={tutorialSession.stepIndex}
+        totalSteps={TUTORIAL_STEPS.length}
+        canGoBack={tutorialSession.stepIndex > 0}
+        onBack={prevTutorialStep}
+        onNext={nextTutorialStep}
+        onExit={exitTutorial}
       />
 
       {flight ? (
@@ -236,12 +506,12 @@ export default function App() {
             <div className="meta-block">
               <span className="meta-label">Collection Round</span>
               <strong className="meta-value">
-                {Math.min(state.round, state.maxRounds).toString().padStart(2, "0")} / {state.maxRounds}
+                {Math.min(displayState.round, displayState.maxRounds).toString().padStart(2, "0")} / {displayState.maxRounds}
               </strong>
             </div>
             <div className="meta-block">
               <span className="meta-label">Current Score</span>
-              <strong className="meta-value">{state.score.toString().padStart(3, "0")}</strong>
+              <strong className="meta-value">{displayState.score.toString().padStart(3, "0")}</strong>
             </div>
           </div>
         </header>
@@ -274,25 +544,31 @@ export default function App() {
             >
               随机开局
             </button>
+            <button type="button" onClick={startTutorial}>
+              新手教程
+            </button>
           </form>
         </section>
 
         <section className="layout">
           <aside className="sidebar">
-            <CustomerCardView customers={state.currentCustomers} />
-            <RulesPanel onOpenRulebook={() => setShowRulebook(true)} />
+            <CustomerCardView
+              customers={displayState.currentCustomers}
+              registerRootRef={(node) => registerTutorialTarget("customer-pool", node)}
+            />
+            <RulesPanel onOpenRulebook={() => setShowRulebook(true)} onStartTutorial={startTutorial} />
           </aside>
 
           <section className="workbench" aria-label="香水调制工作台">
             <div className="vessels">
               {[0, 1].map((slotIndex) => {
                 const bottleIndex = slotIndex as 0 | 1;
-                const bottle = state.bottles[bottleIndex];
+                const bottle = displayState.bottles[bottleIndex];
                 const currentBottle = bottle ?? createBottle(bottleIndex);
-                const canPlace = state.phase === "place" && canPlaceIngredient(currentBottle);
+                const canPlace = displayState.phase === "place" && canPlaceIngredient(currentBottle);
                 const ingredientLabel =
-                  activePlacementDie !== null && state.phase === "place"
-                    ? INGREDIENT_INFO[state.rolledDice[activePlacementDie]].label
+                  activePlacementDie !== null && displayState.phase === "place"
+                    ? INGREDIENT_INFO[displayState.rolledDice[activePlacementDie]].label
                     : null;
 
                 return (
@@ -300,35 +576,37 @@ export default function App() {
                     key={bottleIndex}
                     bottle={bottle}
                     slotIndex={bottleIndex}
-                    placeMode={state.phase === "place"}
+                    registerRootRef={(node) => registerTutorialTarget(`bottle-${bottleIndex}`, node)}
+                    placeMode={displayState.phase === "place"}
                     placeLabel={ingredientLabel ? `将 ${ingredientLabel} 放入此瓶` : "先点击一张香材"}
                     placeDisabled={!canPlace || activePlacementDie === null || Boolean(flight)}
-                    placeActive={state.phase === "place" && activePlacementDie !== null && canPlace && !flight}
+                    placeActive={displayState.phase === "place" && activePlacementDie !== null && canPlace && !flight}
                     receiveActive={receivingBottle === bottleIndex}
                     onPlace={() => handlePlaceIntoBottle(bottleIndex)}
                     registerPlaceButtonRef={(node) => registerBottleButtonRef(bottleIndex, node)}
                     registerTargetSlotRef={(node) => registerBottleTargetRef(bottleIndex, node)}
-                />
-              );
-            })}
+                  />
+                );
+              })}
             </div>
             <DiceDraft
-              state={state}
+              state={displayState}
               activePlacementDie={activePlacementDie}
-              onToggle={(index) => applyPlayerAction({ type: "toggleDie", index })}
-              onConfirm={() => applyPlayerAction({ type: "confirmChoice" })}
-              onSelectPlacementDie={(index) => setActivePlacementDie(index)}
+              onToggle={handleToggleDie}
+              onConfirm={handleConfirmChoice}
+              onSelectPlacementDie={handleSelectPlacementDie}
               registerCardRef={registerCardRef}
               registerSwatchRef={registerSwatchRef}
+              registerRootRef={(node) => registerTutorialTarget("draft-panel", node)}
               animationLocked={Boolean(flight)}
               animatingDraftIndex={flight?.draftIndex ?? null}
             />
           </section>
 
           <aside className="sidebar">
-            <Scoreboard state={state} />
+            <Scoreboard state={displayState} registerRootRef={(node) => registerTutorialTarget("score-panel", node)} />
             <NoteGuide />
-            <LogPanel log={state.log} />
+            <LogPanel log={displayState.log} />
           </aside>
         </section>
       </section>
